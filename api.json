@@ -1,0 +1,21 @@
+{
+    "auth": [
+        {
+            "path": "/account",
+            "method": "GET",
+            "funcName": "GetAccount",
+            "response": {
+                "username": "string",
+                "password": "string"
+            }
+        },
+        {
+            "path": "/account/change-email",
+            "method": "POST",
+            "funcName": "ChangeEmail",
+            "request": {
+                "newEmail": "string"
+            }
+        }
+    ]
+}
