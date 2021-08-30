@@ -61,10 +61,10 @@ func main() {
 
 		check(os.MkdirAll(filepath.Dir(genInfo.OutputPath), os.ModePerm))
 
-		check(os.Truncate(genInfo.OutputPath, 0))
-
-		out, err := os.OpenFile(genInfo.OutputPath, os.O_CREATE, 0644)
+		out, err := os.OpenFile(genInfo.OutputPath, os.O_CREATE, os.ModePerm)
 		check(err)
+
+		check(out.Truncate(0))
 
 		check(tmpl.Execute(out, struct {
 			Services []string
