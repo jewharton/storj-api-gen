@@ -3,65 +3,62 @@
 package consoleapi
 
 import (
-    "encoding/json"
-    "net/http"
+	"encoding/json"
+	"net/http"
 
-    "github.com/spacemonkeygo/monkit/v3"
-    "go.uber.org/zap"
+	"go.uber.org/zap"
 )
-
 {{- range $serviceName := $.Services }}
-    {{- if (index $.ApiDef $serviceName) }}
-        {{- range $endpoint := (index $.ApiDef $serviceName)}}
+	{{- if (index $.ApiDef $serviceName) }}
+		{{- range $endpoint := (index $.ApiDef $serviceName)}}
+{{- if $endpoint.Request }}
 
-{{ if $endpoint.Request }}
 type {{ $endpoint.FuncName }}Request struct {
-    {{- range $arg, $type := $endpoint.Request }}
-        {{ $arg }}: {{ $type }} `json: {{ $arg }}`
-    {{- end }}
+	{{- range $arg, $type := $endpoint.Request }}
+	{{ strtitle $arg }} {{ $type }} `json: {{ $arg }}`
+	{{- end }}
 }
 {{- end }}
+{{- if $endpoint.Response }}
 
-{{ if $endpoint.Response }}
 type {{ $endpoint.FuncName }}Response struct {
-    {{- range $arg, $type := $endpoint.Response }}
-        {{ $arg }}: {{ $type }} `json: {{ $arg }}`
-    {{- end }}
+	{{- range $arg, $type := $endpoint.Response }}
+	{{ strtitle $arg }} {{ $type }} `json: {{ $arg }}`
+	{{- end }}
 }
 {{- end }}
 
 func ({{ substr $serviceName 0 1 }} *{{ strtitle $serviceName }}) {{ $endpoint.FuncName }}(w http.ResponseWriter, r *http.Request) {
-    ctx := r.Context()
+	ctx := r.Context()
 	var err error
 	defer mon.Task()(&ctx)(&err)
 
-
-    {{ if $endpoint.Request }}
-    var data {{ $endpoint.FuncName }}Request
-    err = json.NewDecoder(r.Body).Decode(&data)
+	{{ if $endpoint.Request -}}
+	var data {{ $endpoint.FuncName }}Request
+	err = json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
 		a.serveJSONError(w, err)
 		return
 	}
-    {{ else }}
-    data := []byte{}
-    {{- end }}
+	{{- else -}}
+	data := []byte{}
+	{{- end }}
 
-    {{ if $endpoint.Response }}result, err :={{ else }}err ={{ end }} {{ substr $serviceName 0 1 }}.service.{{ $endpoint.FuncName }}(ctx, data)
-    if err != nil {
+	{{ if $endpoint.Response }}result, err :={{ else }}err ={{ end }} {{ substr $serviceName 0 1 }}.service.{{ $endpoint.FuncName }}(ctx, data)
+	if err != nil {
 		a.serveJSONError(w, err)
 		return
 	}
-    {{- if $endpoint.Response }}
+	{{- if $endpoint.Response }}
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(result)
 	if err != nil {
-		a.log.Error("registration handler could not encode userID", zap.Error(ErrAuthAPI.Wrap(err)))
+		a.log.Error("{{ $endpoint.FuncName }} could not encode API response", zap.Error(ErrAPI.Wrap(err)))
 		return
 	}
-    {{- end }}
+	{{- end }}
 }
-        {{- end }}
-    {{- end }}
+		{{- end }}
+	{{- end }}
 {{- end}}

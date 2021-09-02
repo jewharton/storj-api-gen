@@ -17,7 +17,7 @@ func SetupEndpoints(router *mux.Router, {{ range $i, $name := $.Services }}
 	{{ $serviceName }}Router := router.PathPrefix("/api/v0/{{ $serviceName }}").Subrouter()
 			{{- range $endpoint := (index $.ApiDef $serviceName) }}
 				{{- $funcName := (print $serviceName "Controller." $endpoint.FuncName) }}
-	{{ $serviceName }}Router.HandleFunc("{{ $endpoint.Path }}", {{ $funcName }}).Methods({{ $endpoint.Method }})
+	{{ $serviceName }}Router.HandleFunc("{{ $endpoint.Path }}", {{ $funcName }}).Methods("{{ $endpoint.Method }}")
 			{{- end }}
 		{{- end }}
 	{{- end }}

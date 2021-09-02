@@ -2,10 +2,8 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"go/format"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,13 +27,29 @@ type Endpoint struct {
 
 type ApiDef map[string][]Endpoint
 
+var api ApiDef = ApiDef{
+	"auth": {
+		{
+			Path:     "/account",
+			Method:   "GET",
+			FuncName: "GetAccount",
+			Response: map[string]interface{}{
+				"username": "string",
+				"password": "string",
+			},
+		},
+		{
+			Path:     "/account/change-email",
+			Method:   "POST",
+			FuncName: "ChangeEmail",
+			Request: map[string]interface{}{
+				"newEmail": "string",
+			},
+		},
+	},
+}
+
 func main() {
-	data, err := ioutil.ReadFile("api.json")
-	check(err)
-
-	var api ApiDef
-	check(json.Unmarshal(data, &api))
-
 	genInfos := []struct {
 		TemplatePath string
 		OutputPath   string
