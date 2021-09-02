@@ -67,7 +67,7 @@ func main() {
 
 		check(os.MkdirAll(filepath.Dir(genInfo.OutputPath), os.ModePerm))
 
-		out, err := os.OpenFile(genInfo.OutputPath, os.O_CREATE|os.O_WRONLY, os.ModeAppend)
+		out, err := os.OpenFile(genInfo.OutputPath, os.O_CREATE|os.O_WRONLY, os.ModePerm)
 		check(err)
 
 		check(out.Truncate(0))
