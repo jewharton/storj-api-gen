@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"go/format"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -36,8 +39,11 @@ func main() {
 	genInfos := []struct {
 		TemplatePath string
 		OutputPath   string
+		IsGo         bool
 	}{
+		// TODO set IsGo to true when formatting works correctly
 		{TemplatePath: "templates/consoleweb.tmpl", OutputPath: "satellite/console/consoleweb/api.go"},
+		// TODO set IsGo to true when formatting works correctly
 		{TemplatePath: "templates/consoleapi.tmpl", OutputPath: "satellite/console/consoleweb/consoleapi/api.go"},
 		{TemplatePath: "templates/web.tmpl", OutputPath: "web/satellite/src/api/api.ts"},
 	}
@@ -66,13 +72,28 @@ func main() {
 
 		check(out.Truncate(0))
 
-		check(tmpl.Execute(out, struct {
-			Services []string
-			ApiDef   ApiDef
-		}{
-			Services: consoleServices,
-			ApiDef:   api,
-		}))
+		if genInfo.IsGo {
+			buf := bytes.NewBuffer([]byte{})
+			check(tmpl.Execute(buf, struct {
+				Services []string
+				ApiDef   ApiDef
+			}{
+				Services: consoleServices,
+				ApiDef:   api,
+			}))
+			// TODO do this without pulling everything into memory
+			formattedBuf, err := format.Source(buf.Bytes())
+			check(err)
+			io.Copy(out, bytes.NewReader(formattedBuf))
+		} else {
+			check(tmpl.Execute(out, struct {
+				Services []string
+				ApiDef   ApiDef
+			}{
+				Services: consoleServices,
+				ApiDef:   api,
+			}))
+		}
 	}
 }
 
